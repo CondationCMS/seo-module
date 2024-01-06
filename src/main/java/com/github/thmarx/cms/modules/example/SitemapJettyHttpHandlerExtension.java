@@ -22,13 +22,14 @@ package com.github.thmarx.cms.modules.example;
  * #L%
  */
 
-import com.github.thmarx.cms.api.extensions.JettyHttpHandlerExtensionPoint;
+import com.github.thmarx.cms.api.extensions.HttpHandlerExtensionPoint;
 import com.github.thmarx.cms.api.extensions.Mapping;
 import com.github.thmarx.cms.api.feature.features.DBFeature;
 import com.github.thmarx.cms.api.feature.features.SitePropertiesFeature;
 import com.github.thmarx.cms.api.module.CMSModuleContext;
 import com.github.thmarx.modules.api.annotation.Extension;
 import java.io.IOException;
+import static java.security.AccessController.getContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.http.HttpHeader;
@@ -43,8 +44,8 @@ import org.eclipse.jetty.util.Callback;
  * @author t.marx
  */
 @Slf4j
-@Extension(JettyHttpHandlerExtensionPoint.class)
-public class SitemapJettyHttpHandlerExtension extends JettyHttpHandlerExtensionPoint {
+@Extension(HttpHandlerExtensionPoint.class)
+public class SitemapJettyHttpHandlerExtension extends HttpHandlerExtensionPoint {
 
 	@Override
 	public Mapping getMapping() {

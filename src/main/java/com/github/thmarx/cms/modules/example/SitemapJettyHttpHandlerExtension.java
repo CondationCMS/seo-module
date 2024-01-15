@@ -22,6 +22,7 @@ package com.github.thmarx.cms.modules.example;
  * #L%
  */
 
+import com.github.thmarx.cms.api.extensions.HttpHandler;
 import com.github.thmarx.cms.api.extensions.HttpHandlerExtensionPoint;
 import com.github.thmarx.cms.api.extensions.Mapping;
 import com.github.thmarx.cms.api.feature.features.DBFeature;
@@ -54,7 +55,7 @@ public class SitemapJettyHttpHandlerExtension extends HttpHandlerExtensionPoint 
 	}
 	
 	@RequiredArgsConstructor
-	public static class SitemapHandler extends Handler.Abstract {
+	public static class SitemapHandler implements HttpHandler {
 
 		private final CMSModuleContext context;
 		

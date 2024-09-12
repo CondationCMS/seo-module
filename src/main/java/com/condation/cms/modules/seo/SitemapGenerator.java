@@ -1,4 +1,4 @@
-package com.github.thmarx.cms.modules.example;
+package com.condation.cms.modules.seo;
 
 /*-
  * #%L

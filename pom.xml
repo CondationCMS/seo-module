@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<groupId>com.github.thmarx.cms.modules</groupId>
+	<groupId>com.condation.cms.modules</groupId>
 	<artifactId>seo-module</artifactId>
-	<version>1.2.0</version>
+	<version>2.0.0</version>
 	<packaging>jar</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -12,19 +12,30 @@
 		<module.name>seo module</module.name>
 		<module.priority>HIGH</module.priority>
 		
-		<cms.version>4.5.0</cms.version>
+		<cms.version>6.0.0-SNAPSHOT</cms.version>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 	</properties>
+	<inceptionYear>2024</inceptionYear>
+	<organization>
+		<name>CondationCMS</name>
+		<url>https://condation.com</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>GPL v3</name>
+			<url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+		</license>
+	</licenses>
 	<dependencies>
 		<dependency>
-			<groupId>com.github.thmarx.cms</groupId>
+			<groupId>com.condation.cms</groupId>
 			<artifactId>cms-api</artifactId>
 			<scope>provided</scope>
 			<version>${cms.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.thmarx.cms.module.framework</groupId>
+			<groupId>com.condation.cms.module.framework</groupId>
 			<artifactId>modules-api</artifactId>
 			<scope>provided</scope>
 			<version>${cms.version}</version>
@@ -38,6 +49,32 @@
 	</dependencies>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>2.4.0</version>
+				<configuration>
+					<verbose>false</verbose>
+					<licenseName>gpl_v3</licenseName>
+				</configuration>
+				<executions>
+					<execution>
+						<id>first</id>
+						<goals>
+							<goal>update-file-header</goal>
+						</goals>
+						<phase>process-sources</phase>
+						<configuration>
+							<licenseName>gpl_v3</licenseName>
+							<roots>
+								<root>src/main/java</root>
+								<root>src/resources</root>
+								<root>src/test</root>
+							</roots>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>3.6.0</version>

@@ -22,8 +22,8 @@ package com.condation.cms.modules.seo;
  * #L%
  */
 
-import com.github.thmarx.cms.api.SiteProperties;
-import com.github.thmarx.cms.api.db.ContentNode;
+import com.condation.cms.api.SiteProperties;
+import com.condation.cms.api.db.ContentNode;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;

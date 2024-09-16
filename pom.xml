@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<groupId>com.github.thmarx.cms.modules</groupId>
+	<groupId>com.condation.cms.modules</groupId>
 	<artifactId>seo-module</artifactId>
 	<version>2.0.0</version>
 	<packaging>jar</packaging>
@@ -29,13 +29,13 @@
 	</licenses>
 	<dependencies>
 		<dependency>
-			<groupId>com.github.thmarx.cms</groupId>
+			<groupId>com.condation.cms</groupId>
 			<artifactId>cms-api</artifactId>
 			<scope>provided</scope>
 			<version>${cms.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.thmarx.cms.module.framework</groupId>
+			<groupId>com.condation.cms.module.framework</groupId>
 			<artifactId>modules-api</artifactId>
 			<scope>provided</scope>
 			<version>${cms.version}</version>

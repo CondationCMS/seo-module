@@ -57,7 +57,10 @@ public class SitemapGenerator implements AutoCloseable {
 	}
 	
 	private String createURL (final ContentNode node) {
-		String baseUrl = siteProperties.getOrDefault("baseurl", "");
+		String baseUrl = (String) siteProperties.get("baseurl");
+		if (baseUrl == null) {
+			baseUrl = "";
+		}
 		if (baseUrl.endsWith("/")) {
 			baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
 		}

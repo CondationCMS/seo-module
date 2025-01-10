@@ -21,6 +21,7 @@ package com.condation.cms.modules.seo.linking;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import com.condation.cms.api.cache.ICache;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -38,21 +39,21 @@ class KeywordManager {
 
 	private final Map<String, KeywordMapping> keywordMappings;
 	private final List<KeywordPattern> compiledPatterns;
-	private final Map<String, String> replacementCache;
+	private final ICache<String, String> replacementCache;
 
 	private final ProcessingConfig config;
 
-	public KeywordManager(ProcessingConfig config) {
+	public KeywordManager(ProcessingConfig config, ICache<String, String> cache) {
 		this.keywordMappings = new HashMap<>();
 		this.compiledPatterns = new ArrayList<>();
-		this.replacementCache = new ConcurrentHashMap<>();
 		this.config = config;
+		this.replacementCache = cache;
 	}
-	
-	public void clear () {
+
+	public void clear() {
 		keywordMappings.clear();
 		compiledPatterns.clear();
-		replacementCache.clear();
+		replacementCache.invalidate();
 	}
 
 	public void addKeywords(String url, String... keywords) {
@@ -145,20 +146,27 @@ class KeywordManager {
 
 	private String buildLink(String matchedText, KeywordMapping mapping) {
 		String cacheKey = matchedText + mapping.hashCode();
-		return replacementCache.computeIfAbsent(cacheKey, k -> {
-			StringBuilder link = new StringBuilder(matchedText.length() * 2)
-					.append("<a href=\"")
-					.append(mapping.getUrl())
-					.append("\"");
 
-			mapping.getAttributes().forEach((key, value)
-					-> link.append(" ").append(key).append("=\"").append(value).append("\""));
+		if (replacementCache.contains(cacheKey)) {
+			return replacementCache.get(cacheKey);
+		}
 
-			return link.append(">")
-					.append(matchedText) // Use original matched text to preserve case
-					.append("</a>")
-					.toString();
-		});
+		StringBuilder link = new StringBuilder(matchedText.length() * 2)
+				.append("<a href=\"")
+				.append(mapping.getUrl())
+				.append("\"");
+
+		mapping.getAttributes().forEach((key, value)
+				-> link.append(" ").append(key).append("=\"").append(value).append("\""));
+
+		String theLink = link.append(">")
+				.append(matchedText) // Use original matched text to preserve case
+				.append("</a>")
+				.toString();
+
+		replacementCache.put(cacheKey, theLink);
+
+		return theLink;
 	}
 
 	private static class Match {

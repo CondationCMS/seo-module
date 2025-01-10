@@ -21,6 +21,7 @@ package com.condation.cms.modules.seo.linking;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import com.condation.cms.api.cache.ICache;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -48,8 +49,32 @@ class KeywordLinkProcessorTest {
 				.setCaseSensitive(false)
 				.setWholeWordsOnly(true)
 				.build();
-		processor = new KeywordLinkProcessor(defaultConfig);
+		iCache = new ICache<String, String>() {
+			@Override
+			public void put(String key, String value) {
+			}
+
+			@Override
+			public String get(String key) {
+				return null;
+			}
+
+			@Override
+			public boolean contains(String key) {
+				return false;
+			}
+
+			@Override
+			public void invalidate() {
+			}
+
+			@Override
+			public void invalidate(String key) {
+			}
+		};
+		processor = new KeywordLinkProcessor(defaultConfig, iCache);
 	}
+	private ICache<String, String> iCache;
 
 	@Nested
 	@DisplayName("Basic Functionality Tests")
@@ -145,7 +170,7 @@ class KeywordLinkProcessorTest {
 					.setCaseSensitive(true)
 					.build();
 
-			KeywordLinkProcessor sensitiveProcessor = new KeywordLinkProcessor(caseSensitiveConfig);
+			KeywordLinkProcessor sensitiveProcessor = new KeywordLinkProcessor(caseSensitiveConfig, iCache);
 			sensitiveProcessor.addKeywords("https://test.com", "Java");
 
 			String result = sensitiveProcessor.process("<div>Learn Java and java</div>");
@@ -287,7 +312,7 @@ class KeywordLinkProcessorTest {
 					.setWholeWordsOnly(false)
 					.build();
 
-			KeywordLinkProcessor nonWholeWordProcessor = new KeywordLinkProcessor(config);
+			KeywordLinkProcessor nonWholeWordProcessor = new KeywordLinkProcessor(config, iCache);
 			nonWholeWordProcessor.addKeywords("https://test.com", "Java");
 
 			assertThat(nonWholeWordProcessor.process("<div>JavaScript</div>"))
@@ -348,7 +373,7 @@ class KeywordLinkProcessorTest {
 					.setWholeWordsOnly(true)
 					.build();
 
-			KeywordLinkProcessor sensitiveProcessor = new KeywordLinkProcessor(caseSensitiveConfig);
+			KeywordLinkProcessor sensitiveProcessor = new KeywordLinkProcessor(caseSensitiveConfig, iCache);
 			sensitiveProcessor.addKeywords("https://test.com", "Java");
 
 			String result = sensitiveProcessor.process("<div>java JAVA Java jAVa</div>");

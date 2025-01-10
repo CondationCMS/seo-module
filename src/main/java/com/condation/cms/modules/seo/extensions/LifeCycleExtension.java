@@ -22,6 +22,9 @@ package com.condation.cms.modules.seo.extensions;
  * #L%
  */
 
+import com.condation.cms.api.cache.CacheManager;
+import com.condation.cms.api.cache.ICache;
+import com.condation.cms.api.feature.features.CacheManagerFeature;
 import com.condation.cms.api.feature.features.DBFeature;
 import com.condation.cms.api.module.CMSModuleContext;
 import com.condation.cms.api.module.CMSRequestContext;
@@ -30,8 +33,7 @@ import com.condation.modules.api.ModuleLifeCycleExtension;
 import com.condation.modules.api.annotation.Extension;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -54,7 +56,11 @@ public class LifeCycleExtension extends ModuleLifeCycleExtension<CMSModuleContex
 		try {
 			Path configPath = getContext().get(DBFeature.class).db().getFileSystem().resolve("config/keyword_links.yaml");
 			
-			PROCESSOR = KeywordLinkProcessor.build(configPath);
+			ICache<String, String> cache = getContext().get(CacheManagerFeature.class).cacheManager().get(
+					"seo_keyword_links", 
+					new CacheManager.CacheConfig(100l, Duration.ofMinutes(1)));
+			
+			PROCESSOR = KeywordLinkProcessor.build(configPath, cache);
 		} catch (IOException ex) {
 			log.error("", ex);
 		}

@@ -26,6 +26,7 @@ package com.condation.cms.modules.seo.linking;
  *
  * @author t.marx
  */
+import com.condation.cms.api.cache.ICache;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.jsoup.Jsoup;
@@ -43,14 +44,14 @@ public class KeywordLinkProcessor implements Consumer<KeywordConfiguration.Keywo
 	
 	private KeywordConfiguration keywordConfig;
 
-    public KeywordLinkProcessor(ProcessingConfig config) {
-        this.keywordManager = new KeywordManager(config);
+    public KeywordLinkProcessor(ProcessingConfig config, ICache<String, String> cache) {
+        this.keywordManager = new KeywordManager(config, cache);
         this.config = config;
     }
 
-	public static KeywordLinkProcessor build (Path configFile) throws IOException {
+	public static KeywordLinkProcessor build (Path configFile, ICache<String, String> cache) throws IOException {
 		ProcessingConfig pconfig = new ProcessingConfig.Builder().build();
-		var processor = new KeywordLinkProcessor(pconfig);
+		var processor = new KeywordLinkProcessor(pconfig, cache);
 		KeywordConfiguration kconfig = new KeywordConfiguration(configFile, processor, pconfig);
 		
 		processor.keywordConfig = kconfig;

@@ -21,7 +21,8 @@ package com.condation.cms.modules.seo.linking;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
-
+import com.condation.cms.api.db.ContentNode;
+import com.condation.cms.api.db.DB;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,9 +31,8 @@ import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -46,29 +46,29 @@ public class KeywordConfiguration {
 	private final Consumer<Keyword> updateConsumer;
 	private final ProcessingConfig config;
 
+	private DB db;
+
 	public KeywordConfiguration(Path configFile, Consumer<Keyword> updateConsumer, ProcessingConfig config) throws IOException {
 		this.configFile = configFile;
 		this.updateConsumer = updateConsumer;
 		this.config = config;
 	}
 
-	public boolean isUpdateNecassary () {
+	public boolean isUpdateNecassary() {
 		try {
 			return isModified();
 		} catch (IOException ex) {
 			return false;
 		}
 	}
-	
+
 	private boolean isModified() throws IOException {
 		if (Files.exists(configFile) && lastModifiedTime == null) {
 			return true;
 		} else if (!Files.exists(configFile)) {
 			return false;
-		} else if (
-				Files.exists(configFile)
-				&& Files.getLastModifiedTime(configFile).compareTo(lastModifiedTime) > 0
-				) {
+		} else if (Files.exists(configFile)
+				&& Files.getLastModifiedTime(configFile).compareTo(lastModifiedTime) > 0) {
 			return true;
 		}
 
@@ -86,31 +86,38 @@ public class KeywordConfiguration {
 		if (!Files.exists(configFile)) {
 			return;
 		}
-		
+
 		try (FileInputStream fis = new FileInputStream(this.configFile.toFile())) {
 			Yaml yaml = new Yaml();
 			Map<String, Object> yamlData = yaml.load(fis);
-			
+
 			config.setCaseSensitive((boolean) yamlData.getOrDefault("caseSensitive", true));
 			config.setWholeWordsOnly((boolean) yamlData.getOrDefault("wholeWordsOnly", true));
-			
+
 			List<Map<String, Object>> replacements = (List<Map<String, Object>>) yamlData.getOrDefault("replacements", Collections.emptyList());
-			
+
 			if (replacements != null) {
 				replacements.stream()
-						.map(map -> new Keyword((String)map.get("link"), (List<String>)map.get("keywords")))
+						.map(map -> new Keyword((String) map.get("link"), (List<String>) map.get("keywords")))
 						.forEach(updateConsumer);
 			}
-			
+
 			updateLastModifiedTime();
-			
+
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to load configuration from " + configFile.toString(), e);
 		}
 	}
+
+	private void loadFromDB() {
+		var query = db.getContent().query((ContentNode t, Integer u) -> t);
 	
-	public static record Keyword (String url, List<String> keywords) {
-		public String[] keywordArray () {
+		query.whereExists("seo.keywords");
+	}
+
+	public static record Keyword(String url, List<String> keywords) {
+
+		public String[] keywordArray() {
 			return keywords.toArray(String[]::new);
 		}
 	}

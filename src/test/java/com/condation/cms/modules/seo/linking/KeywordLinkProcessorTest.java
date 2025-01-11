@@ -422,4 +422,15 @@ class KeywordLinkProcessorTest {
 		assertThat(result)
 				.isEqualToIgnoringWhitespace("<div><a href=\"https://condation.com\">CondationCMS</a> is build on <a href=\"https://java.net\">java</a>!</div>");
 	}
+	
+	@Test
+	void remove_combined_keywords() {
+		processor.addKeywords("https://java.net", "java is create");
+
+		var result = processor.process("<div>CondationCMS is build on java because java is create!</div>");
+		result = result.replaceAll("\\n", "");
+
+		assertThat(result)
+				.isEqualToIgnoringWhitespace("<div>CondationCMS is build on java because <a href=\"https://java.net\">java is create</a>!</div>");
+	}
 }

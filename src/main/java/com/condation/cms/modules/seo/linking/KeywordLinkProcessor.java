@@ -36,12 +36,14 @@ import org.jsoup.nodes.TextNode;
 
 import java.util.*;
 import java.util.function.Consumer;
+import lombok.Getter;
 
 public class KeywordLinkProcessor implements Consumer<KeywordConfiguration.Keyword> {
     private final KeywordManager keywordManager;
     private final ProcessingConfig config;
     private static final int MINIMUM_KEYWORD_LENGTH = 2;
 	
+	@Getter
 	private KeywordConfiguration keywordConfig;
 
     public KeywordLinkProcessor(ProcessingConfig config, ICache<String, String> cache) {
@@ -57,6 +59,12 @@ public class KeywordLinkProcessor implements Consumer<KeywordConfiguration.Keywo
 		processor.keywordConfig = kconfig;
 		
 		return processor;
+	}
+	
+	
+	public void update () {
+		keywordManager.clear();
+		keywordConfig.update();
 	}
 	
     public String process(String htmlContent) {

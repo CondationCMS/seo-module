@@ -21,17 +21,20 @@ package com.condation.cms.modules.seo.linking;
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+import com.condation.cms.api.Constants;
 import com.condation.cms.api.db.ContentNode;
 import com.condation.cms.api.db.DB;
+import com.condation.cms.api.utils.MapUtil;
+import com.condation.cms.api.utils.PathUtil;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import org.yaml.snakeyaml.Yaml;
 
@@ -52,6 +55,10 @@ public class KeywordConfiguration {
 		this.configFile = configFile;
 		this.updateConsumer = updateConsumer;
 		this.config = config;
+	}
+	
+	public void setDB (DB db) {
+		this.db = db;
 	}
 
 	public boolean isUpdateNecassary() {
@@ -83,6 +90,8 @@ public class KeywordConfiguration {
 
 	public void update() {
 
+		loadFromDB();
+		
 		if (!Files.exists(configFile)) {
 			return;
 		}
@@ -93,6 +102,8 @@ public class KeywordConfiguration {
 
 			config.setCaseSensitive((boolean) yamlData.getOrDefault("caseSensitive", true));
 			config.setWholeWordsOnly((boolean) yamlData.getOrDefault("wholeWordsOnly", true));
+			
+			config.setExcludeTags((Collection<String>) yamlData.getOrDefault("excludeTags", Collections.emptyList()));
 
 			List<Map<String, Object>> replacements = (List<Map<String, Object>>) yamlData.getOrDefault("replacements", Collections.emptyList());
 
@@ -110,9 +121,22 @@ public class KeywordConfiguration {
 	}
 
 	private void loadFromDB() {
+		if (db == null) {
+			return;
+		}
 		var query = db.getContent().query((ContentNode t, Integer u) -> t);
 	
-		query.whereExists("seo.keywords");
+		var nodes = query.whereExists("seo.autolink.keywords").get();
+		
+		nodes.forEach(node -> {
+			final Path contentBase = db.getFileSystem().resolve(Constants.Folders.CONTENT);
+			var nodePath = contentBase.resolve(node.uri());
+			
+			String url = PathUtil.toURI(nodePath, contentBase);
+			List<String> keywords = (List<String>) MapUtil.getValue(node.data(), "seo.autolink.keywords");
+			
+			updateConsumer.accept(new Keyword(url, keywords));
+		});
 	}
 
 	public static record Keyword(String url, List<String> keywords) {

@@ -23,6 +23,7 @@ package com.condation.cms.modules.seo.linking;
  */
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,7 +46,10 @@ public class ProcessingConfig {
 		this.wholeWordsOnly = wholeWordsOnly;
 	}
 
-	
+	public void setExcludeTags (Collection<String> tags) {
+		excludedTags.clear();
+		excludedTags.addAll(tags);
+	}
 	
     public boolean isExcludedTag(String tag) {
         return excludedTags.contains(tag.toLowerCase());

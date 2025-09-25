@@ -27,7 +27,7 @@ import com.condation.cms.api.extensions.HttpHandlerExtensionPoint;
 import com.condation.cms.api.extensions.Mapping;
 import com.condation.cms.api.feature.features.DBFeature;
 import com.condation.cms.api.feature.features.SitePropertiesFeature;
-import com.condation.cms.api.module.CMSModuleContext;
+import com.condation.cms.api.module.SiteModuleContext;
 import com.condation.modules.api.annotation.Extension;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +57,7 @@ public class SitemapJettyHttpHandlerExtension extends HttpHandlerExtensionPoint 
 	@RequiredArgsConstructor
 	public static class SitemapHandler implements HttpHandler {
 
-		private final CMSModuleContext context;
+		private final SiteModuleContext context;
 		
 		@Override
 		public boolean handle(Request request, Response response, Callback callback) throws Exception {

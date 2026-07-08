@@ -29,6 +29,7 @@ import com.condation.cms.api.feature.features.CurrentNodeFeature;
 import com.condation.cms.api.feature.features.RequestFeature;
 import com.condation.cms.api.feature.features.SitePropertiesFeature;
 import com.condation.modules.api.annotation.Extension;
+import java.util.List;
 
 /**
  *
@@ -64,15 +65,28 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 		if (!siteProperties.getOrDefault("seo.canonical", true)) {
 			return;
 		}
-		var canonicalUrl = SeoUrlHelper.createCanonical(siteProperties, node);
+		String canonicalUrl = SeoUrlHelper.createCanonical(siteProperties, node);
 
 		var request = getRequestContext().get(RequestFeature.class);
-		if (request.hasQueryParameter("page")) {
-			var page = request.getQueryParameterAsInt("page", 1);
-			if (page > 1) {
-				canonicalUrl += "?page=" + page;
+		List<String> canonicalQueryParameters = siteProperties.getOrDefault("seo.canonical.queryParameters", List.of("page"));
+
+		StringBuilder query = new StringBuilder();
+		for (String name : canonicalQueryParameters) {
+			if ("page".equals(name)) {
+				int page = request.getQueryParameterAsInt("page", 1);
+				if (page > 1) {
+					query.append(query.isEmpty() ? "?" : "&").append("page=").append(page);
+				}
+				continue;
+			}
+			if (request.hasQueryParameter(name)) {
+				String value = request.getQueryParameter(name, "");
+				if (!value.isBlank()) {
+					query.append(query.isEmpty() ? "?" : "&").append(name).append("=").append(value);
+				}
 			}
 		}
+		canonicalUrl += query.toString();
 
 		sb.append("<link rel=\"canonical\" href=\"").append(canonicalUrl).append("\" />");
 	}

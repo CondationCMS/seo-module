@@ -50,7 +50,7 @@ public class SEORoutesExtension extends RoutesExtensionPoint {
     public boolean sitemap(Request request, Response response, Callback callback) throws Exception {
         final SiteProperties siteProperties = context.get(SitePropertiesFeature.class).siteProperties();
 
-        if (siteProperties.getOrDefault("seo.sitemap", true)) {
+        if (siteProperties.getOrDefault("seo.sitemap.enabled", true)) {
             try (var sitemap = new SitemapGenerator(
                     Response.asBufferedOutputStream(request, response), siteProperties)) {
                 response.getHeaders().add(HttpHeader.CONTENT_TYPE, "application/xml");
@@ -81,7 +81,7 @@ public class SEORoutesExtension extends RoutesExtensionPoint {
 
         final SiteProperties siteProperties = context.get(SitePropertiesFeature.class).siteProperties();
         
-        if (siteProperties.getOrDefault("seo.robotstxt", true)) {
+        if (siteProperties.getOrDefault("seo.robotstxt.enabled", true)) {
             try (var robotstxt = new RobotsTxtGenerator(
                     Response.asBufferedOutputStream(request, response),
                     siteProperties,

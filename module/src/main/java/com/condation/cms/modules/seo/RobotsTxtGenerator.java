@@ -41,7 +41,7 @@ public class RobotsTxtGenerator implements AutoCloseable {
     public void create() throws Exception {
         RobotsTxt robotstxt = new RobotsTxt();
 
-        if (siteProperties.getOrDefault("seo.sitemap", true)) {
+        if (siteProperties.getOrDefault("seo.sitemap.enabled", true)) {
             robotstxt.addSitemap(SeoUrlHelper.createUrl(siteProperties, "sitemap.xml"));
         }
         

@@ -48,9 +48,7 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 
 		StringBuilder sb = new StringBuilder();
 
-		if (!node.getMetaValue("seo.index", true)) {
-			sb.append("<meta name=\"robots\" content=\"noindex,nofollow\" />\n");
-		}
+		appendRobots(sb, node, siteProperties);
 
 		appendOpenGraph(sb, node, siteProperties);
 
@@ -61,14 +59,68 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 		return sb.toString();
 	}
 
+	private void appendRobots(StringBuilder sb, ContentNode node, SiteProperties siteProperties) {
+		boolean index = node.getMetaValue("seo.index", true);
+		boolean follow = node.getMetaValue("seo.follow", true);
+
+		if (!index) {
+			appendRobotsTag(sb, false, follow);
+			return;
+		}
+
+		var request = getRequestContext().get(RequestFeature.class);
+
+		List<String> noindexParameters = siteProperties.getOrDefault(
+				"seo.query.noindexParameters",
+				List.of());
+
+		boolean hasNoindexParameter = noindexParameters.stream()
+				.anyMatch(request::hasQueryParameter);
+
+		if (hasNoindexParameter) {
+			appendRobotsTag(sb, false, true);
+			return;
+		}
+
+		int maxIndexableParameters = siteProperties.getOrDefault(
+				"seo.query.maxIndexableContentParameters",
+				-1);
+
+		if (maxIndexableParameters >= 0) {
+			List<String> contentQueryParameters = siteProperties.getOrDefault(
+					"seo.query.contentParameters",
+					List.of("page"));
+
+			long activeContentParamCount = contentQueryParameters.stream()
+					.filter(name -> !"page".equals(name))
+					.filter(name -> !noindexParameters.contains(name))
+					.filter(request::hasQueryParameter)
+					.count();
+
+			if (activeContentParamCount > maxIndexableParameters) {
+				appendRobotsTag(sb, false, true);
+				return;
+			}
+		}
+	}
+
+	private void appendRobotsTag(StringBuilder sb, boolean index, boolean follow) {
+		sb.append("<meta name=\"robots\" content=\"")
+				.append(index ? "index" : "noindex")
+				.append(',')
+				.append(follow ? "follow" : "nofollow")
+				.append("\" />\n");
+	}
+
 	private void appendCanonical(StringBuilder sb, ContentNode node, SiteProperties siteProperties) {
-		if (!siteProperties.getOrDefault("seo.canonical", true)) {
+		if (!siteProperties.getOrDefault("seo.canonical.enabled", true)) {
 			return;
 		}
 		String canonicalUrl = SeoUrlHelper.createCanonical(siteProperties, node);
 
 		var request = getRequestContext().get(RequestFeature.class);
-		List<String> canonicalQueryParameters = siteProperties.getOrDefault("seo.canonical.queryParameters", List.of("page"));
+		List<String> canonicalQueryParameters = siteProperties.getOrDefault("seo.canonical.queryParameters",
+				List.of("page"));
 
 		StringBuilder query = new StringBuilder();
 		for (String name : canonicalQueryParameters) {
@@ -92,7 +144,7 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 	}
 
 	private void appendOpenGraph(StringBuilder sb, ContentNode node, SiteProperties siteProperties) {
-		if (!siteProperties.getOrDefault("seo.opengraph", true)) {
+		if (!siteProperties.getOrDefault("seo.opengraph.enabled", true)) {
 			return;
 		}
 		String sharedTitle = node.getMetaValue("seo.title", node.getMetaValue("title", ""));
@@ -120,7 +172,7 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 	}
 
 	private void appendTwitterCard(StringBuilder sb, ContentNode node, SiteProperties siteProperties) {
-		if (!siteProperties.getOrDefault("seo.twitter", true)) {
+		if (!siteProperties.getOrDefault("seo.twitter.enabled", true)) {
 			return;
 		}
 		String sharedTitle = node.getMetaValue("seo.title", node.getMetaValue("title", ""));
@@ -134,7 +186,8 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 		String description = node.getMetaValue("seo.twitter.description", sharedDescription);
 		String image = node.getMetaValue("seo.twitter.image", sharedImage);
 		String site = node.getMetaValue("seo.twitter.site", siteProperties.getOrDefault("seo.twitter.site", ""));
-		String creator = node.getMetaValue("seo.twitter.creator", siteProperties.getOrDefault("seo.twitter.creator", ""));
+		String creator = node.getMetaValue("seo.twitter.creator",
+				siteProperties.getOrDefault("seo.twitter.creator", ""));
 
 		sb.append("<meta name=\"twitter:card\" content=\"").append(escapeHtml(card)).append("\" />\n");
 		sb.append("<meta name=\"twitter:url\" content=\"").append(escapeHtml(url)).append("\" />\n");
@@ -142,7 +195,8 @@ public class SeoHooks extends HookSystemRegisterExtensionPoint {
 			sb.append("<meta name=\"twitter:title\" content=\"").append(escapeHtml(title)).append("\" />\n");
 		}
 		if (!description.isBlank()) {
-			sb.append("<meta name=\"twitter:description\" content=\"").append(escapeHtml(description)).append("\" />\n");
+			sb.append("<meta name=\"twitter:description\" content=\"").append(escapeHtml(description))
+					.append("\" />\n");
 		}
 		if (!image.isBlank()) {
 			sb.append("<meta name=\"twitter:image\" content=\"").append(escapeHtml(image)).append("\" />\n");

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+	
+    <parent>
+        <groupId>com.condation.cms.modules.seo</groupId>
+        <artifactId>seo-parent</artifactId>
+        <version>4.1.0</version>
+    </parent>
+    <artifactId>seo-module</artifactId>
+    <packaging>jar</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <module.id>seo-module</module.id>
+        <module.name>seo module</module.name>
+        <module.priority>HIGH</module.priority>
+    </properties>
+    <inceptionYear>2024</inceptionYear>
+    <organization>
+        <name>CondationCMS</name>
+        <url>https://condation.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>GPL v3</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+        </license>
+    </licenses>
+    <dependencies>
+        <dependency>
+            <groupId>com.condation.cms.modules.seo</groupId>
+            <artifactId>seo-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.condation.cms</groupId>
+            <artifactId>cms-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.condation.modules.framework</groupId>
+            <artifactId>modules-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.8.0</version>
+				<configuration>
+					<descriptors>
+						<descriptor>src/main/assembly/assembly.xml</descriptor>
+					</descriptors>
+					<finalName>${module.id}</finalName>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+        </plugins>
+    </build>
+</project>

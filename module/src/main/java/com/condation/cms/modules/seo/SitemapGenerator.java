@@ -48,40 +48,21 @@ public class SitemapGenerator implements AutoCloseable {
 	
 	public void addNode (final ContentNode node) throws IOException {
 		output.write("<url>".getBytes(StandardCharsets.UTF_8));
-		output.write("<loc>%s</loc>".formatted(createURL(node)
+		output.write("<loc>%s</loc>".formatted(escapeXml(SeoUrlHelper.createUrl(siteProperties, node))
 		).getBytes(StandardCharsets.UTF_8));
 		output.write("<lastmod>%s</lastmod>"
 				.formatted(DateTimeFormatter.ISO_LOCAL_DATE.format(node.lastmodified()))
 				.getBytes(StandardCharsets.UTF_8));
 		output.write("</url>".getBytes(StandardCharsets.UTF_8));
 	}
-	
-	private String createURL (final ContentNode node) {
-		String baseUrl = (String) siteProperties.get("baseurl");
-		if (baseUrl == null) {
-			baseUrl = "";
-		}
-		if (baseUrl.endsWith("/")) {
-			baseUrl = baseUrl.substring(0, baseUrl.lastIndexOf("/"));
-		}
-		
-		return "%s/%s".formatted(baseUrl, patchURi(node.uri()));
-	}
 
-	private String patchURi (String uri) {
-		if (uri.endsWith("index.md")) {
-			uri = uri.replace("index.md", "");
-		}
-		if (uri.endsWith("/")) {
-			uri = uri.substring(0, uri.lastIndexOf("/"));
-		}
-		if (uri.endsWith(".md")) {
-			uri = uri.substring(0, uri.lastIndexOf("."));
-		}
-		if (uri.startsWith("/")) {
-			uri = uri.substring(1);
-		}
-		return uri;
+	private String escapeXml (final String value) {
+		return value
+				.replace("&", "&amp;")
+				.replace("<", "&lt;")
+				.replace(">", "&gt;")
+				.replace("\"", "&quot;")
+				.replace("'", "&apos;");
 	}
 	
 	@Override

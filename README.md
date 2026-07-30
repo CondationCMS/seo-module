@@ -148,8 +148,19 @@ Additional rules can be injected via the hook `module/seo/robotstxt`. The hook r
 
 **Hook example:**
 
+Javascript sample
+```javascript
+$hooks.registerFilter("module/seo/robotstxt", (robots) -> {
+    robots.group("*").disallow("/admin");
+    robots.group("Googlebot").allow("/");
+    return robots;
+});
+```
+
+Sample for java
 ```java
-hookSystem.registerFilter("module/seo/robotstxt", (RobotsTxt robots) -> {
+@Filter("module/seo/robotstxt")
+public void extendRobotsTxt(RobotsTxt robots) {
     robots.group("*").disallow("/admin");
     robots.group("Googlebot").allow("/");
     return robots;

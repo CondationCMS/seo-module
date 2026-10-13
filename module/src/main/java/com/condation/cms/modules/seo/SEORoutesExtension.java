@@ -22,7 +22,14 @@ package com.condation.cms.modules.seo;
  * #L%
  */
 import com.condation.cms.api.SiteProperties;
-import java.io.IOException;
+import com.condation.cms.api.configuration.configs.CollectionConfiguration;
+import com.condation.cms.api.configuration.configs.CollectionDefinition;
+import com.condation.cms.api.db.collection.CollectionItemMetadata;
+import com.condation.cms.api.feature.features.ConfigurationFeature;
+import com.condation.cms.api.feature.features.RepositoryFeature;
+import com.condation.cms.api.utils.MapUtil;
+import com.condation.cms.content.CollectionRouteTemplate;
+import java.util.Comparator;
 
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.server.Request;
@@ -51,29 +58,97 @@ public class SEORoutesExtension extends RoutesExtensionPoint {
         final SiteProperties siteProperties = context.get(SitePropertiesFeature.class).siteProperties();
 
         if (siteProperties.getOrDefault("seo.sitemap.enabled", true)) {
-            try (var sitemap = new SitemapGenerator(
-                    Response.asBufferedOutputStream(request, response), siteProperties)) {
+            try (var sitemap = new SitemapIndexGenerator(Response.asBufferedOutputStream(request, response))) {
                 response.getHeaders().add(HttpHeader.CONTENT_TYPE, "application/xml");
                 sitemap.start();
-                context.get(DBFeature.class).db().getContent().query((node, length) -> node).get().forEach(node -> {
-                    try {
-                        if (node.getMetaValue("seo.index", true)) {
-                            sitemap.addNode(node);
-                        }
-                    } catch (IOException ex) {
-                        log.error(null, ex);
-                    }
-                });
+                sitemap.addSitemap(SeoUrlHelper.createUrl(siteProperties, "sitemap-nodes.xml"));
+                for (var definition : collectionDefinitions().collections().values().stream()
+                        .filter(entry -> entry.detailPage().isPresent())
+                        .sorted(Comparator.comparing(CollectionDefinition::name))
+                        .toList()) {
+                    sitemap.addSitemap(SeoUrlHelper.createUrl(siteProperties,
+                            "sitemap-collection-" + definition.name() + ".xml"));
+                }
             } catch (Exception e) {
-                log.error(null, e);
+                callback.failed(e);
+                return true;
             }
             callback.succeeded();
+            return true;
+        }
+        return false;
+    }
 
+    @Route("/sitemap-nodes.xml")
+    public boolean sitemapNodes(Request request, Response response, Callback callback) throws Exception {
+        final SiteProperties siteProperties = context.get(SitePropertiesFeature.class).siteProperties();
+        if (!siteProperties.getOrDefault("seo.sitemap.enabled", true)) {
+            return false;
+        }
+
+        try (var sitemap = new SitemapGenerator(
+                Response.asBufferedOutputStream(request, response), siteProperties)) {
+            response.getHeaders().add(HttpHeader.CONTENT_TYPE, "application/xml");
+            sitemap.start();
+            for (var node : context.get(DBFeature.class).db().getContent()
+                    .query((entry, length) -> entry).get()) {
+                if (node.getMetaValue("seo.index", true)) {
+                    sitemap.addNode(node);
+                }
+            }
+        } catch (Exception e) {
+            callback.failed(e);
+            return true;
+        }
+        callback.succeeded();
+        return true;
+    }
+
+    @Route("^/sitemap-collection-([a-zA-Z0-9_-]+)\\.xml$")
+    public boolean sitemapCollection(Request request, Response response, Callback callback) throws Exception {
+        final SiteProperties siteProperties = context.get(SitePropertiesFeature.class).siteProperties();
+        if (!siteProperties.getOrDefault("seo.sitemap.enabled", true)) {
+            return false;
+        }
+
+        var path = request.getHttpURI().getPath();
+        var name = path.substring(path.lastIndexOf("/sitemap-collection-") + "/sitemap-collection-".length(),
+                path.length() - ".xml".length());
+        var definition = collectionDefinitions().collection(name);
+        if (definition.isEmpty() || definition.get().detailPage().isEmpty()) {
+            response.setStatus(404);
+            callback.succeeded();
             return true;
         }
 
-        return false;
+        try (var sitemap = new SitemapGenerator(
+                Response.asBufferedOutputStream(request, response), siteProperties)) {
+            response.getHeaders().add(HttpHeader.CONTENT_TYPE, "application/xml");
+            sitemap.start();
+            var route = new CollectionRouteTemplate(definition.get().detailPage().orElseThrow());
+            var repository = context.get(RepositoryFeature.class).collectionRepository();
+            for (CollectionItemMetadata item : repository.metadataQuery(name).get()) {
+                if (Boolean.FALSE.equals(MapUtil.getValue(item.meta(), "seo.index"))) {
+                    continue;
+                }
+                try {
+                    sitemap.addUrl(SeoUrlHelper.createUrl(siteProperties, route.render(item.id(), item.meta())));
+                } catch (IllegalArgumentException e) {
+                    log.warn("Skipping collection item {}/{} without a valid detail URL", name, item.id(), e);
+                }
+            }
+        } catch (Exception e) {
+            callback.failed(e);
+            return true;
+        }
+        callback.succeeded();
+        return true;
+    }
 
+    private CollectionConfiguration collectionDefinitions() {
+        var configuration = context.get(ConfigurationFeature.class)
+                .configuration().get(CollectionConfiguration.class);
+        return configuration != null ? configuration : new CollectionConfiguration(java.util.Map.of());
     }
 
     @Route("/robots.txt")

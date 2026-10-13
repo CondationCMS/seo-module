@@ -8,7 +8,7 @@ A CondationCMS module that provides SEO essentials: canonical URLs, robots meta 
 - Robots meta tag with per-node control and query-parameter-aware indexing rules
 - Open Graph meta tags
 - Twitter Card meta tags
-- XML sitemap at `/sitemap.xml`
+- Sitemap index at `/sitemap.xml`, with separate sitemaps for pages and collections
 - `robots.txt` at `/robots.txt` with hook-based extensibility
 
 ---
@@ -24,7 +24,7 @@ All settings live in `site.yaml` (or the equivalent site properties file) under 
 | `seo.canonical.enabled` | boolean | `true` | Enable canonical URL output |
 | `seo.opengraph.enabled` | boolean | `true` | Enable Open Graph meta tags |
 | `seo.twitter.enabled` | boolean | `true` | Enable Twitter Card meta tags |
-| `seo.sitemap.enabled` | boolean | `true` | Enable `/sitemap.xml` route and sitemap link in `robots.txt` |
+| `seo.sitemap.enabled` | boolean | `true` | Enable sitemap routes and the sitemap index link in `robots.txt` |
 | `seo.robotstxt.enabled` | boolean | `true` | Enable `/robots.txt` route |
 
 ---
@@ -136,13 +136,17 @@ maxIndexableContentParameters = 1
 
 ### Sitemap
 
-The sitemap at `/sitemap.xml` includes all nodes where `seo.index` is not set to `false`. Each entry contains `<loc>` and `<lastmod>`.
+`/sitemap.xml` is a sitemap index. It links `/sitemap-nodes.xml` and one `/sitemap-collection-{name}.xml` for each collection with a configured detail page in `config/collections.yaml`.
+
+`/sitemap-nodes.xml` contains normal content nodes where `seo.index` is not `false`. Each entry has `<loc>` and `<lastmod>`.
+
+Collection sitemaps contain items where `seo.index` is not `false`. URLs follow the collection's configured detail route, including date formats and mappings. Items whose required route fields are missing or invalid are skipped. Collection entries have `<loc>`; the collection API does not expose a modification date for them.
 
 ---
 
 ### robots.txt
 
-The `robots.txt` at `/robots.txt` is generated dynamically. When `seo.sitemap` is enabled, a `Sitemap:` directive pointing to `/sitemap.xml` is appended automatically.
+The `robots.txt` at `/robots.txt` is generated dynamically. When `seo.sitemap.enabled` is enabled, a `Sitemap:` directive pointing to `/sitemap.xml` is appended automatically.
 
 Additional rules can be injected via the hook `module/seo/robotstxt`. The hook receives a `RobotsTxt` object and returns the modified version.
 
@@ -175,7 +179,7 @@ public void extendRobotsTxt(RobotsTxt robots) {
 mvn clean package
 ```
 
-Requires Java 25 and CondationCMS API `8.2.0`.
+Requires Java 25 and CondationCMS API `8.4.0`.
 
 ---
 

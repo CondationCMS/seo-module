@@ -47,16 +47,25 @@ public class SitemapGenerator implements AutoCloseable {
 	}
 	
 	public void addNode (final ContentNode node) throws IOException {
+		addUrl(SeoUrlHelper.createUrl(siteProperties, node),
+				DateTimeFormatter.ISO_LOCAL_DATE.format(node.lastmodified()));
+	}
+
+	public void addUrl(final String url) throws IOException {
+		addUrl(url, null);
+	}
+
+	private void addUrl(final String url, final String lastmod) throws IOException {
 		output.write("<url>".getBytes(StandardCharsets.UTF_8));
-		output.write("<loc>%s</loc>".formatted(escapeXml(SeoUrlHelper.createUrl(siteProperties, node))
+		output.write("<loc>%s</loc>".formatted(escapeXml(url)
 		).getBytes(StandardCharsets.UTF_8));
-		output.write("<lastmod>%s</lastmod>"
-				.formatted(DateTimeFormatter.ISO_LOCAL_DATE.format(node.lastmodified()))
-				.getBytes(StandardCharsets.UTF_8));
+		if (lastmod != null) {
+			output.write("<lastmod>%s</lastmod>".formatted(lastmod).getBytes(StandardCharsets.UTF_8));
+		}
 		output.write("</url>".getBytes(StandardCharsets.UTF_8));
 	}
 
-	private String escapeXml (final String value) {
+	static String escapeXml (final String value) {
 		return value
 				.replace("&", "&amp;")
 				.replace("<", "&lt;")
